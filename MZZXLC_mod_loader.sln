@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35013.160
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MZZXLC_mod_loader", "MZZXLC_mod_loader.vcxproj", "{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		ForPub|x64 = ForPub|x64
+		ForPub|x86 = ForPub|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.Debug|x64.ActiveCfg = Debug|x64
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.Debug|x64.Build.0 = Debug|x64
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.Debug|x86.ActiveCfg = Debug|Win32
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.Debug|x86.Build.0 = Debug|Win32
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.ForPub|x64.ActiveCfg = ForPub|x64
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.ForPub|x64.Build.0 = ForPub|x64
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.ForPub|x86.ActiveCfg = ForPub|Win32
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.ForPub|x86.Build.0 = ForPub|Win32
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.Release|x64.ActiveCfg = Release|x64
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.Release|x64.Build.0 = Release|x64
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.Release|x86.ActiveCfg = Release|Win32
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F5C6F980-7C47-4CED-AA8C-D7E612E5AC1C}
+	EndGlobalSection
+EndGlobal
