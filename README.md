@@ -5,8 +5,11 @@ MZZXLC Mod Loader is a basic mod loader for the PC version of *Mega Man Zero/ZX 
 Many concepts have been "borrowed" from [chaudloader](https://github.com/RockmanEXEZone/chaudloader).
 
 ## For users
+1. Download the latest release zip of **MZZXLC Mod Loader** from:
+
+   https://github.com/StraDaMa/MZZXLC-Mod-Loader/releases
 1. Navigate to the game's folder by right-clicking on *Mega Man Zero/ZX Legacy Collection* in Steam and clicking on `Manage -> Browse Local Files`
-1. Copy `MZZXLC_mod_loader.asi` and `d3d9.dll` to the game's folder.
+1. Copy `MZZXLC_mod_loader.asi` and `d3d9.dll` from the release zip to the game's folder.
 1. Run `MZZXLC.exe`, this will create a `mods` folder.
 1. Copy mods into the `mods` folder and start the game.
 
@@ -28,9 +31,9 @@ Mods consists of the following files in a folder inside the `mods` folder:
 - If the mod directory contains a `.dll` file with the same name as the mod directory, it will be loaded. If the dll exports a function `mod_open`, it will be called when the mod is loaded.
 
     The `mod_open` function should have the following signature:
-    ```c
-    __declspec(dllexport) void mod_open() {
-    // Do all your logic here.
+    ```c++
+    extern "C" __declspec(dllexport) void mod_open() {
+        // Do all your logic here.
     }
     ```
 
