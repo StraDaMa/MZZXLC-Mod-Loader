@@ -17,6 +17,7 @@ void findMods(const fs::path& modsDir, std::vector<ModInfo>& mods) {
 				iniPath /= "modinfo.ini";
 				ModInfo mod;
 				mod.name = modPath.filename().u8string();
+				mod.version = { 0, 0, 0 };
 				mod.version_requirement = { 0, 0, 0 };
 				if (fs::exists(iniPath)) {
 					//initialize by ini
@@ -44,7 +45,11 @@ void findMods(const fs::path& modsDir, std::vector<ModInfo>& mods) {
 							toml::table& tbl = result;
 							mod.title = tbl["title"].value_or(mod.name);
 							mod.description = tbl["description"].value_or(mod.name);
-							std::optional<semver::version> semver_result = semver::from_string_noexcept(tbl["requires_loader_version"].value_or("0.0.0"));
+							std::optional<semver::version> semver_result = semver::from_string_noexcept(tbl["version"].value_or("0.0.0"));
+							if (semver_result) {
+								mod.version = semver_result.value();
+							}
+							semver_result = semver::from_string_noexcept(tbl["requires_loader_version"].value_or("0.0.0"));
 							if (semver_result) {
 								mod.version_requirement = semver_result.value();
 							}

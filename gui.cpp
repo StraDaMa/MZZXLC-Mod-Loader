@@ -29,6 +29,7 @@ static std::vector<ModInfo>* sMods;
 static boost::container::set<std::string>* sLoaderMods;
 
 static HWND hwndTitleField = NULL;
+static HWND hwndVersionField = NULL;
 static HWND hwndAuthorField = NULL;
 static HWND hwndVersionWarning = NULL;
 static HWND hwndDescriptionField = NULL;
@@ -69,7 +70,20 @@ static void RefreshListBoxItems() {
 	{
 		item.iItem = i;
 		const std::string& modName = mods[i].name;
-		ConvertToWString(modName, wsTmp);
+		const std::string versionString = mods[i].version.to_string();
+		ConvertToWString(mods[i].name, wsTmp);
+		int outStringlength = snprintf(nullptr, 0,
+			"%s v%s",
+			modName.c_str(),
+			versionString.c_str());
+		if (outStringlength > 0) {
+			std::string listBoxTitle(outStringlength, (char)0x00);
+			snprintf(listBoxTitle.data(), outStringlength + 1,
+				"%s v%s",
+				modName.c_str(),
+				versionString.c_str());
+			ConvertToWString(listBoxTitle, wsTmp);
+		}
 		bool modChecked = loaderMods.count(modName) != 0;
 		mods[i].enabled = modChecked;
 		item.pszText = (LPWSTR)wsTmp.c_str();
@@ -158,12 +172,23 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			NULL,                              // No menu.
 			NULL,
 			NULL);
+		//Create version label
+		HWND hwndVersionLabel = CreateWindow(
+			L"STATIC",                         // Predefined class; Unicode assumed
+			L"Version:",                       // Button text
+			WS_VISIBLE | WS_CHILD | SS_RIGHT,  // Styles
+			350, 50,                           // x,y position
+			80, 20,                            // Button width,height
+			hWnd,                              // Parent window
+			NULL,                              // No menu.
+			NULL,
+			NULL);
 		//Create authros label
 		HWND hwndAuthorsLabel = CreateWindow(
 			L"STATIC",                         // Predefined class; Unicode assumed
 			L"Authors:",                       // Button text
 			WS_VISIBLE | WS_CHILD | SS_RIGHT,  // Styles
-			350, 50,                           // x,y position
+			350, 90,                           // x,y position
 			80, 20,                            // Button width,height
 			hWnd,                              // Parent window
 			NULL,                              // No menu.
@@ -181,6 +206,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			NULL,
 			NULL);
 		SendMessage(hwndTitleLabel, WM_SETFONT, (WPARAM)sWindowFont, TRUE);
+		SendMessage(hwndVersionLabel, WM_SETFONT, (WPARAM)sWindowFont, TRUE);
 		SendMessage(hwndAuthorsLabel, WM_SETFONT, (WPARAM)sWindowFont, TRUE);
 		SendMessage(hwndDescriptionLabel, WM_SETFONT, (WPARAM)sWindowFont, TRUE);
 		//Create title field
@@ -194,12 +220,23 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			NULL,                             // No menu.
 			NULL,
 			NULL);
+		//Create version field
+		hwndVersionField = CreateWindow(
+			L"STATIC",                        // Predefined class; Unicode assumed
+			L"",                              // Button text
+			WS_VISIBLE | WS_CHILD | SS_LEFT,  // Styles
+			430 + 4, 50,                      // x,y position
+			clRect.right - 430 + 4, 40,       // Button width,height
+			hWnd,                             // Parent window
+			NULL,                             // No menu.
+			NULL,
+			NULL);
 		//Create authors field
 		hwndAuthorField = CreateWindow(
 			L"STATIC",                        // Predefined class; Unicode assumed
 			L"",                              // Button text
 			WS_VISIBLE | WS_CHILD | SS_LEFT,  // Styles
-			430 + 4, 50,                      // x,y position
+			430 + 4, 90,                      // x,y position
 			clRect.right - 430 + 4, 40,       // Button width,height
 			hWnd,                             // Parent window
 			NULL,                             // No menu.
@@ -210,7 +247,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			L"STATIC",                        // Predefined class; Unicode assumed
 			L"",                              // Button text
 			WS_VISIBLE | WS_CHILD | SS_CENTER,// Styles
-			230, 90,                          // x,y position
+			230, 130,                          // x,y position
 			clRect.right - (230) + 4, 40,     // Button width,height
 			hWnd,                             // Parent window
 			NULL,                             // No menu.
@@ -228,6 +265,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			NULL,
 			NULL);
 		SendMessage(hwndTitleField, WM_SETFONT, (WPARAM)sWindowFont, TRUE);
+		SendMessage(hwndVersionField, WM_SETFONT, (WPARAM)sWindowFont, TRUE);
 		SendMessage(hwndAuthorField, WM_SETFONT, (WPARAM)sWindowFont, TRUE);
 		SendMessage(hwndDescriptionField, WM_SETFONT, (WPARAM)sWindowFont, TRUE);
 		SendMessage(hwndVersionWarning, WM_SETFONT, (WPARAM)sWindowFont, TRUE);
@@ -249,6 +287,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 					std::wstring wsTmp;
 					ConvertToWString(mod.title, wsTmp);
 					SendMessage(hwndTitleField, WM_SETTEXT, NULL, (LPARAM)wsTmp.c_str());
+					ConvertToWString(mod.version.to_string(), wsTmp);
+					SendMessage(hwndVersionField, WM_SETTEXT, NULL, (LPARAM)wsTmp.c_str());
 					{
 						std::string authors;
 						authors.reserve(128);
@@ -356,7 +396,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		if (controlHWND == hwndVersionWarning) {
 			SetTextColor(hdc, RGB(255, 0, 0));
 			SetBkMode(hdc, TRANSPARENT);
-			//SetBkColor(hdc, GetSysColor(COLOR_BTNFACE));
 			return (LRESULT)GetSysColorBrush(COLOR_BTNFACE);
 		}
 		else if (controlHWND == hwndDescriptionField) {

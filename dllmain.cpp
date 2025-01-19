@@ -23,7 +23,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 	case DLL_PROCESS_DETACH:
 	{
 		FreeConsole();
-		return stage0_uninstall() && stage1_install();
+		return stage0_uninstall() && stage1_uninstall();
 	}
 	break;
 	}

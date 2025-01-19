@@ -12,6 +12,7 @@ struct ModInfo
 	std::string name;
 	std::string description;
 	std::vector<std::string> authors;
+	semver::version version;
 	semver::version version_requirement;
 };
 
