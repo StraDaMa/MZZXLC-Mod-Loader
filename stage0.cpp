@@ -162,6 +162,10 @@ HWND ModifiedCreateWindowExW(
 			auto skip_ui = tbl["skip_ui"].value_or(false);
 			if (skip_ui) {
 				findMods(modsDir, mods);
+				for (size_t i = 0; i < mods.size(); i++)
+				{
+					mods[i].enabled = loaderMods.count(mods[i].name) != 0;
+				}
 			}
 			else {
 				bool windowClosed = gui_WinMain(hInstance, &mods, &loaderMods);
