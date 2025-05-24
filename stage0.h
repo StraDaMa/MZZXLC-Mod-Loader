@@ -1,3 +1,5 @@
 #pragma once
-bool stage0_install();
-bool stage0_uninstall();
+namespace stage0 {
+	bool install();
+	bool uninstall();
+}

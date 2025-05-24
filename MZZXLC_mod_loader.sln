@@ -11,6 +11,8 @@ Global
 		Debug|x86 = Debug|x86
 		ForPub|x64 = ForPub|x64
 		ForPub|x86 = ForPub|x86
+		ForPub2|x64 = ForPub2|x64
+		ForPub2|x86 = ForPub2|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
@@ -23,6 +25,10 @@ Global
 		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.ForPub|x64.Build.0 = ForPub|x64
 		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.ForPub|x86.ActiveCfg = ForPub|Win32
 		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.ForPub|x86.Build.0 = ForPub|Win32
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.ForPub2|x64.ActiveCfg = ForPub2|x64
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.ForPub2|x64.Build.0 = ForPub2|x64
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.ForPub2|x86.ActiveCfg = ForPub2|Win32
+		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.ForPub2|x86.Build.0 = ForPub2|Win32
 		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.Release|x64.ActiveCfg = Release|x64
 		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.Release|x64.Build.0 = Release|x64
 		{4B42ADB3-2C46-45A8-81D9-AD05F69EA9EC}.Release|x86.ActiveCfg = Release|Win32

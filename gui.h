@@ -5,6 +5,8 @@
 
 #include <vector>
 #include <string>
-#include <boost/container/set.hpp>
+#include <boost/container/flat_set.hpp>
 
-extern bool gui_WinMain(HINSTANCE hInstance, std::vector<ModInfo>* mods, boost::container::set<std::string>* loaderMods);
+namespace gui {
+	extern bool WinMain(HINSTANCE hInstance, std::vector<ModInfo>* mods, boost::container::flat_set<std::string>* loaderMods);
+}

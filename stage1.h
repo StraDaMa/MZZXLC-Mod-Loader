@@ -1,10 +1,10 @@
 #pragma once
 #include <string>
-#include <boost/unordered_map.hpp>
-
-bool stage1_install();
-bool stage1_uninstall();
-
 #include <filesystem>
+#include <boost/unordered/unordered_flat_map.hpp>
 
-extern boost::unordered_map<std::filesystem::path, std::string> _assetReplacements;
+namespace stage1 {
+	bool install();
+	bool uninstall();
+	extern boost::unordered::unordered_flat_map<std::filesystem::path, std::string> _assetReplacements;
+}

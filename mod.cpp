@@ -3,12 +3,13 @@
 #define TOML_EXCEPTIONS 0
 #include <toml++/toml.hpp>
 
-constexpr semver::version modloader_version{ 0, 1, 0};
+constexpr semver::version modloader_version{ 0, 3, 0};
 
 namespace fs = std::filesystem;
 
 void findMods(const fs::path& modsDir, std::vector<ModInfo>& mods) {
 	mods.clear();
+
 	if (fs::is_directory(modsDir)) {
 		for (const auto& entry : fs::directory_iterator(modsDir)) {
 			if (entry.is_directory()) {

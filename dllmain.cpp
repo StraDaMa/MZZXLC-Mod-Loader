@@ -17,14 +17,14 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 	switch (ul_reason_for_call) {
 	case DLL_PROCESS_ATTACH:
 	{
-		return stage0_install();
+		return stage0::install();
 	}
 	break;
 	case DLL_PROCESS_DETACH:
 	{
 		FreeConsole();
-		bool result1 = stage0_uninstall();
-		bool result2 = stage1_uninstall();
+		bool result1 = stage0::uninstall();
+		bool result2 = stage1::uninstall();
 		return result1 && result2;
 	}
 	break;
