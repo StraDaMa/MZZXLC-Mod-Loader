@@ -1,6 +1,5 @@
 #include "mod.h"
-#include "inih/cpp/INIReader.h"
-#define TOML_EXCEPTIONS 0
+#include "INIReader.h"
 #include <toml++/toml.hpp>
 
 constexpr semver::version modloader_version{ 0, 3, 0};

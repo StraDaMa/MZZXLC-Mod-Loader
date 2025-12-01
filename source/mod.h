@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
-#include "semver/semver.hpp"
+#include "semver.hpp"
 
 struct ModInfo
 {

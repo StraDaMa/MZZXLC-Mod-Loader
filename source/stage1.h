@@ -6,5 +6,5 @@
 namespace stage1 {
 	bool install();
 	bool uninstall();
-	extern boost::unordered::unordered_flat_map<std::filesystem::path, std::string> _assetReplacements;
+	inline boost::unordered::unordered_flat_map<std::filesystem::path, std::string> g_assetReplacements;
 }

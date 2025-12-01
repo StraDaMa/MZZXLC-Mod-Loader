@@ -8,7 +8,7 @@
 #include <print>
 
 #include <windows.h>
-#include <detours.h>
+#include "MinHook.h"
 #include <psapi.h>
 #include <winternl.h>
 #include <algorithm>
@@ -21,28 +21,28 @@
 
 #include <filesystem>
 namespace fs = std::filesystem;
-#include <boost/algorithm/algorithm.hpp>
-#define TOML_EXCEPTIONS 0
 #include <toml++/toml.hpp>
 
 namespace stage0 {
-	static std::vector<HMODULE> loadedDLL;
+	static std::vector<HMODULE> s_loadedDLLs;
+	typedef HMODULE(WINAPI* GetModuleHandleAFunc)(LPCSTR lpModuleName);
+	static GetModuleHandleAFunc oGetModuleHandleA = GetModuleHandleA;
+	static GetModuleHandleAFunc opGetModuleHandleA = nullptr;
 
-	static HMODULE(WINAPI* TrueGetModuleHandleA)(LPCSTR lpModuleName) = GetModuleHandleA;
-	static bool getModuleHooked = false;
-	static uint8_t* targetSectionPtr = nullptr;
-	static size_t targetSectionSize = 0;
-	static HMODULE ModifiedGetModuleHandleA(
+	static bool s_getModuleHooked = false;
+	static uint8_t* s_targetSectionPtr = nullptr;
+	static size_t s_targetSectionSize = 0;
+	static HMODULE mGetModuleHandleA(
 		LPCSTR lpModuleName
 	) {
-		HMODULE returnValue = TrueGetModuleHandleA(lpModuleName);
+		HMODULE returnValue = opGetModuleHandleA(lpModuleName);
 		if (lpModuleName == NULL) {
 			return returnValue;
 		}
 		// Check if module name is "ntdll.dll"
 		// The first call to ntdll is after the target function is unpacked
 		if (strncmp(lpModuleName, "ntdll.dll", 9) == 0) {
-			getModuleHooked = false;
+			s_getModuleHooked = false;
 			//*(uint8_t*)(0x142D57EC0) = 0xC3;
 			// This pattern is enough to find this function
 			alignas(16) static constexpr std::array<uint8_t, 0x18> targetFunctionPattern = {
@@ -52,9 +52,9 @@ namespace stage0 {
 				0x48, 0x89, 0x9D, 0x48, 0xFD, 0xFF, 0xFF,      //MOV QWORD PTR SS:[RBP-0x2B8],RBX
 				0xB8, 0x01, 0x00, 0x00, 0x00                   //MOV EAX,1
 			};
-			uint8_t* targetSectionEndPtr = targetSectionPtr + targetSectionSize;
+			uint8_t* targetSectionEndPtr = s_targetSectionPtr + s_targetSectionSize;
 			uint8_t* targetFunctionPtr = std::search(
-				targetSectionPtr, targetSectionEndPtr,
+				s_targetSectionPtr, targetSectionEndPtr,
 				targetFunctionPattern.data(), targetFunctionPattern.data() + targetFunctionPattern.size()
 			);
 
@@ -64,17 +64,16 @@ namespace stage0 {
 				*targetFunctionPtr = 0xC3;
 			}
 			// Detour isnt needed anymore
-			DetourTransactionBegin();
-			DetourUpdateThread(GetCurrentThread());
-			DetourDetach(&(PVOID&)TrueGetModuleHandleA, (PVOID)ModifiedGetModuleHandleA);
-			DetourTransactionCommit();
+			MH_DisableHook(oGetModuleHandleA);
 		}
 		return returnValue;
 	}
 
-	static HWND(WINAPI* TrueCreateWindowExW)(DWORD dwExStyle, LPCWSTR lpClassName, LPCWSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam) = CreateWindowExW;
-	bool initialized = FALSE;
-	HWND ModifiedCreateWindowExW(
+	typedef HWND(WINAPI* CreateWindowExWFunc)(DWORD dwExStyle, LPCWSTR lpClassName, LPCWSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam);
+	static CreateWindowExWFunc oCreateWindowExW = CreateWindowExW;
+	static CreateWindowExWFunc opCreateWindowExW = nullptr;
+	static bool s_loaderInitialized = FALSE;
+	HWND mCreateWindowExW(
 		DWORD     dwExStyle,
 		LPCWSTR   lpClassName,
 		LPCWSTR   lpWindowName,
@@ -89,12 +88,12 @@ namespace stage0 {
 		LPVOID    lpParam
 	) {
 		bool focusWindow = false;
-		if ((!initialized) && (lpWindowName != NULL)) {
+		if ((!s_loaderInitialized) && (lpWindowName != NULL)) {
 			int res = lstrcmpW(lpWindowName,
 				L"Mega Man Zero/ZX Legacy Collection / ROCKMAN ZERO&ZX DOUBLE HERO COLLECTION"
 			);
 			if (res == 0) {
-				initialized = TRUE;
+				s_loaderInitialized = TRUE;
 
 				// Make all sections writable
 				HMODULE exeBase = GetModuleHandleA("MZZXLC.exe");
@@ -191,7 +190,7 @@ namespace stage0 {
 							wprintf(L"Loading Mod DLL: %s\n", dllPath.c_str());
 							HMODULE modLib = LoadLibrary(dllPath.c_str());
 							if (modLib != NULL) {
-								loadedDLL.push_back(modLib);
+								s_loadedDLLs.push_back(modLib);
 								auto lpModOpen = (void(*)())GetProcAddress(modLib, "mod_open");
 								if (lpModOpen != NULL) {
 									lpModOpen();
@@ -206,7 +205,7 @@ namespace stage0 {
 							for (const auto& assetEntry : fs::recursive_directory_iterator(assetsFolder)) {
 								// Get the original asset this is replacing by getting the path after nativePCx64
 								// and adding it to the exe base path
-								stage1::_assetReplacements.emplace(
+								stage1::g_assetReplacements.emplace(
 									fs::absolute(fs::relative(assetEntry.path(), modPath)),
 									fs::absolute(assetEntry.path()).u8string()
 								);
@@ -227,7 +226,7 @@ namespace stage0 {
 				focusWindow = true;
 			}
 		}
-		HWND returnVal = TrueCreateWindowExW(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
+		HWND returnVal = opCreateWindowExW(dwExStyle, lpClassName, lpWindowName, dwStyle, X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 		if (focusWindow)
 			SetForegroundWindow(returnVal);
 		return returnVal;
@@ -248,7 +247,7 @@ namespace stage0 {
 		if (exeBase == NULL) {
 			return FALSE;
 		}
-			// Check if exe is protected
+		// Check if exe is protected
 		uint8_t* exeBasePtr = (uint8_t*)exeBase;
 		PIMAGE_DOS_HEADER exeDosHeader = (PIMAGE_DOS_HEADER)exeBasePtr;
 		PIMAGE_NT_HEADERS exeNtHeader = (PIMAGE_NT_HEADERS)((DWORD_PTR)exeBasePtr + exeDosHeader->e_lfanew);
@@ -260,38 +259,44 @@ namespace stage0 {
 				PIMAGE_SECTION_HEADER sectionHeader = (PIMAGE_SECTION_HEADER)((DWORD_PTR)IMAGE_FIRST_SECTION(exeNtHeader) + ((DWORD_PTR)IMAGE_SIZEOF_SECTION_HEADER * i));
 				if (strncmp((char*)sectionHeader->Name, ".rsrc", 8) == 0) {
 					PIMAGE_SECTION_HEADER targetSectionHeader = (PIMAGE_SECTION_HEADER)((DWORD_PTR)IMAGE_FIRST_SECTION(exeNtHeader) + ((DWORD_PTR)IMAGE_SIZEOF_SECTION_HEADER * (i + 1)));
-					targetSectionPtr = exeBasePtr + targetSectionHeader->VirtualAddress;
-					targetSectionSize = targetSectionHeader->Misc.VirtualSize;
+					s_targetSectionPtr = exeBasePtr + targetSectionHeader->VirtualAddress;
+					s_targetSectionSize = targetSectionHeader->Misc.VirtualSize;
 					break;
 				}
 			}
-			getModuleHooked = true;
+			s_getModuleHooked = true;
 		}
 
-		DetourRestoreAfterWith();
-
-		DetourTransactionBegin();
-		DetourUpdateThread(GetCurrentThread());
-		if (getModuleHooked) {
-			DetourAttach(&(PVOID&)TrueGetModuleHandleA, (PVOID)ModifiedGetModuleHandleA);
+		if (s_getModuleHooked) {
+			if (MH_CreateHook(oGetModuleHandleA, &mGetModuleHandleA, (LPVOID*)&opGetModuleHandleA) != MH_OK) [[unlikely]] {
+				return FALSE;
+			}
+			if (MH_EnableHook(oGetModuleHandleA) != MH_OK) [[unlikely]] {
+				return FALSE;
+			}
 		}
-		DetourAttach(&(PVOID&)TrueCreateWindowExW, (PVOID)ModifiedCreateWindowExW);
-		DetourTransactionCommit();
-		loadedDLL.reserve(20);
+		if (MH_CreateHook(oCreateWindowExW, &mCreateWindowExW, (LPVOID*)&opCreateWindowExW) != MH_OK) [[unlikely]] {
+			return FALSE;
+		}
+		if (MH_EnableHook(oCreateWindowExW) != MH_OK) [[unlikely]] {
+			return FALSE;
+		}
+		s_loadedDLLs.reserve(20);
 		return TRUE;
 	}
 
 	bool uninstall() {
-		DetourTransactionBegin();
-		DetourUpdateThread(GetCurrentThread());
-		if (getModuleHooked) {
-			DetourDetach(&(PVOID&)TrueGetModuleHandleA, (PVOID)ModifiedGetModuleHandleA);
+		if (s_getModuleHooked) {
+			if (MH_DisableHook(oGetModuleHandleA) != MH_OK) [[unliekly]] {
+				return FALSE;
+			}
 		}
-		DetourDetach(&(PVOID&)TrueCreateWindowExW, (PVOID)ModifiedCreateWindowExW);
-		DetourTransactionCommit();
-		for (size_t i = 0; i < loadedDLL.size(); i++)
+		if (MH_DisableHook(oCreateWindowExW) != MH_OK) [[unliekly]] {
+			return FALSE;
+		}
+		for (size_t i = 0; i < s_loadedDLLs.size(); i++)
 		{
-			FreeLibrary(loadedDLL[i]);
+			FreeLibrary(s_loadedDLLs[i]);
 		}
 		return TRUE;
 	}
